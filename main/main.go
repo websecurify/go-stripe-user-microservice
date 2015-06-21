@@ -33,7 +33,7 @@ func main() {
 	
 	// ---
 	
-	s.RegisterService(new(v1.StripeUserService), "1")
+	s.RegisterService(new(v1.StripeUserMicroservice), "1")
 	
 	// ---
 	
