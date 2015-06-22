@@ -52,6 +52,10 @@ func InitMongo() {
 	
 	MongoSession = session
 	MongoCollection = collection
+	
+	// ---
+	
+	initModel()
 }
 
 // ---
