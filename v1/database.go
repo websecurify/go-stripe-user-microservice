@@ -46,7 +46,7 @@ func InitMongo() {
 	
 	// ---
 	
-	collection := session.DB(MongoDatabase).C("StripeUsers")
+	collection := session.DB(MongoDatabase).C(MongoCollectionName)
 	
 	// ---
 	
