@@ -5,10 +5,12 @@ package v1
 // ---
 
 import (
+	"errors"
 	"testing"
 	
 	// ---
 	
+	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	
 	// ---
@@ -34,6 +36,20 @@ func findById(id Id) (StripeUserEntry, error) {
 	return u, e
 }
 
+func ensureIdNotFound(id Id) (error) {
+	_, e := findById(id)
+	
+	if e != mgo.ErrNotFound {
+		if e != nil {
+			return e
+		} else {
+			return errors.New("entry found")
+		}
+	} else {
+		return nil
+	}
+}
+
 // ---
 // ---
 // ---
@@ -51,7 +67,7 @@ func stripeCustomer(stripeCustomerId StripeCustomerId) (*stripe.Customer, error)
 // ---
 // ---
 
-func create(userId UserId, email Email, description Description) (CreateReply, error) {
+func doCreate(userId UserId, email Email, description Description) (CreateReply, error) {
 	s := StripeUserMicroservice{}
 	
 	a := CreateArgs{
@@ -68,7 +84,7 @@ func create(userId UserId, email Email, description Description) (CreateReply, e
 	return r, e
 }
 
-func destroy(id Id) (DestroyReply, error) {
+func doDestroy(id Id) (DestroyReply, error) {
 	s := StripeUserMicroservice{}
 	
 	a := DestroyArgs{
@@ -83,7 +99,7 @@ func destroy(id Id) (DestroyReply, error) {
 	return r, e
 }
 
-func destroyByUserId(userId UserId) (DestroyByUserIdReply, error) {
+func doDestroyByUserId(userId UserId) (DestroyByUserIdReply, error) {
 	s := StripeUserMicroservice{}
 	
 	a := DestroyByUserIdArgs{
@@ -98,7 +114,7 @@ func destroyByUserId(userId UserId) (DestroyByUserIdReply, error) {
 	return r, e
 }
 
-func destroyByStripeCustomerId(stripeCustomerId StripeCustomerId) (DestroyByStripeCustomerIdReply, error) {
+func doDestroyByStripeCustomerId(stripeCustomerId StripeCustomerId) (DestroyByStripeCustomerIdReply, error) {
 	s := StripeUserMicroservice{}
 	
 	a := DestroyByStripeCustomerIdArgs{
@@ -113,7 +129,7 @@ func destroyByStripeCustomerId(stripeCustomerId StripeCustomerId) (DestroyByStri
 	return r, e
 }
 
-func query(id Id) (QueryReply, error) {
+func doQuery(id Id) (QueryReply, error) {
 	s := StripeUserMicroservice{}
 	
 	a := QueryArgs{
@@ -128,7 +144,7 @@ func query(id Id) (QueryReply, error) {
 	return r, e
 }
 
-func queryByUserId(userId UserId) (QueryByUserIdReply, error) {
+func doQueryByUserId(userId UserId) (QueryByUserIdReply, error) {
 	s := StripeUserMicroservice{}
 	
 	a := QueryByUserIdArgs{
@@ -143,7 +159,7 @@ func queryByUserId(userId UserId) (QueryByUserIdReply, error) {
 	return r, e
 }
 
-func queryByStripeCustomerId(stripeCustomerId StripeCustomerId) (QueryByStripeCustomerIdReply, error) {
+func doQueryByStripeCustomerId(stripeCustomerId StripeCustomerId) (QueryByStripeCustomerIdReply, error) {
 	s := StripeUserMicroservice{}
 	
 	a := QueryByStripeCustomerIdArgs{
@@ -183,7 +199,7 @@ func TestEndToEnd(t *testing.T) {
 	
 	// ---
 	
-	cr, ce := create(userId, email, description)
+	cr, ce := doCreate(userId, email, description)
 	
 	if ce != nil {
 		t.Error(ce)
@@ -207,7 +223,7 @@ func TestEndToEnd(t *testing.T) {
 	
 	// ---
 	
-	qr, qe := query(cr.Id)
+	qr, qe := doQuery(cr.Id)
 	
 	if qe != nil {
 		t.Error(qe)
@@ -223,7 +239,7 @@ func TestEndToEnd(t *testing.T) {
 	
 	// ---
 	
-	qbuir, qbuie := queryByUserId(userId)
+	qbuir, qbuie := doQueryByUserId(userId)
 	
 	if qbuie != nil {
 		t.Error(qbuie)
@@ -239,7 +255,7 @@ func TestEndToEnd(t *testing.T) {
 	
 	// ---
 	
-	qbscir, qbscie := queryByStripeCustomerId(qbuir.StripeCustomerId)
+	qbscir, qbscie := doQueryByStripeCustomerId(qbuir.StripeCustomerId)
 	
 	if qbscie != nil {
 		t.Error(qbscie)
@@ -255,7 +271,7 @@ func TestEndToEnd(t *testing.T) {
 	
 	// ---
 	
-	_, de := destroy(cr.Id)
+	_, de := doDestroy(cr.Id)
 	
 	if de != nil {
 		t.Error(de)
@@ -263,19 +279,15 @@ func TestEndToEnd(t *testing.T) {
 	
 	// ---
 	
-	_, fe2 := findById(cr.Id)
+	ee := ensureIdNotFound(cr.Id)
 	
-	if fe2 == nil {
-		if fe2 != nil {
-			t.Error(fe2)
-		} else {
-			t.Error("entry found")
-		}
+	if ee != nil {
+		t.Error(ee)
 	}
 	
 	// ---
 	
-	_, ce2 := create(userId, email, description)
+	_, ce2 := doCreate(userId, email, description)
 	
 	if ce2 != nil {
 		t.Error(ce2)
@@ -283,7 +295,7 @@ func TestEndToEnd(t *testing.T) {
 	
 	// ---
 	
-	_, de2 := destroyByUserId(userId)
+	_, de2 := doDestroyByUserId(userId)
 	
 	if de2 != nil {
 		t.Error(de2)
@@ -291,7 +303,7 @@ func TestEndToEnd(t *testing.T) {
 	
 	// ---
 	
-	cr3, ce3 := create(userId, email, description)
+	cr3, ce3 := doCreate(userId, email, description)
 
 	if ce3 != nil {
 		t.Error(ce3)
@@ -299,7 +311,7 @@ func TestEndToEnd(t *testing.T) {
 	
 	// ---
 	
-	_, de3 := destroyByStripeCustomerId(cr3.StripeCustomerId)
+	_, de3 := doDestroyByStripeCustomerId(cr3.StripeCustomerId)
 	
 	if de3 != nil {
 		t.Error(de3)
