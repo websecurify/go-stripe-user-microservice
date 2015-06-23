@@ -45,19 +45,19 @@ func main() {
 	
 	// ---
 	
-	address := os.Getenv("ADDRESS")
+	a := os.Getenv("ADDRESS")
 	
-	if address == "" {
-		address = ":8080"
+	if a == "" {
+		a = ":8080"
 	}
 	
 	// ---
 	
-	log.Println("starting server at", address)
+	log.Println("starting server at", a)
 	
 	// ---
 	
-	log.Fatal(http.ListenAndServe(address, nil))
+	log.Fatal(http.ListenAndServe(a, nil))
 }
 
 // ---
